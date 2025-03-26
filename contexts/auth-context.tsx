@@ -63,11 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 成功メッセージを表示
       toast({
         title: "ログイン成功",
-        description: "マイページにリダイレクトします",
+        description: "メインページにリダイレクトします",
       })
       
-      // マイページにリダイレクト
-      router.push("/mypage")
+      // メインページにリダイレクト
+      router.push("/")
     } catch (error: any) {
       console.error("Error signing in:", error)
       console.error("Error code:", error.code)

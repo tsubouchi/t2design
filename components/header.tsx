@@ -62,9 +62,6 @@ export function Header({ showCredits = false }: HeaderProps) {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/mypage">マイページ</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
                       <Link href="/designs">デザイン一覧</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
