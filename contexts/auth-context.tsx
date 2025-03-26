@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { auth } from "@/lib/firebase"
-import { User, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth"
+import { User, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, onAuthStateChanged } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "@/components/ui/use-toast"
 
@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log("AuthProvider mounted")
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       console.log("Auth state changed:", user?.email)
       setUser(user)
       setLoading(false)
@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       console.log("Provider configured, attempting to sign in...")
-      console.log("Current auth state:", auth.currentUser?.email)
       
       // ログインを実行
       const result = await signInWithPopup(auth, provider)
@@ -70,10 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push("/")
     } catch (error: any) {
       console.error("Error signing in:", error)
-      console.error("Error code:", error.code)
-      console.error("Error message:", error.message)
-      console.error("Error stack:", error.stack)
-      console.error("Current auth state:", auth.currentUser?.email)
       
       let errorMessage = "ログインに失敗しました。もう一度お試しください。"
       

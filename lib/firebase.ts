@@ -29,9 +29,15 @@ if (getApps().length === 0) {
 }
 
 const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error("Auth persistence error:", error);
-});
+
+// 認証状態の永続化を設定
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log("Auth persistence set to LOCAL");
+  })
+  .catch((error) => {
+    console.error("Auth persistence error:", error);
+  });
 
 const db = getFirestore(app);
 const realtimeDb = getDatabase(app);
