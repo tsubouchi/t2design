@@ -25,7 +25,7 @@ export function Header({ showCredits = false }: HeaderProps) {
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold">T2Design</span>
+            <span className="font-bold">t2design</span>
           </Link>
         </div>
 
@@ -35,13 +35,13 @@ export function Header({ showCredits = false }: HeaderProps) {
           </div>
 
           <nav className="flex items-center space-x-2">
-            {user ? (
-              <>
-                {showCredits && (
-                  <div className="mr-4 text-sm">
-                    クレジット: <span className="font-bold">{user.credits || 0}</span>
-                  </div>
-                )}
+            <div className="flex items-center gap-4">
+              {user && showCredits && (
+                <div className="mr-4 text-sm">
+                  クレジット: <span className="font-bold">{user.credits || 0}</span>
+                </div>
+              )}
+              {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -73,12 +73,8 @@ export function Header({ showCredits = false }: HeaderProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </>
-            ) : (
-              <Button asChild>
-                <Link href="/login">ログイン</Link>
-              </Button>
-            )}
+              )}
+            </div>
           </nav>
         </div>
       </div>
