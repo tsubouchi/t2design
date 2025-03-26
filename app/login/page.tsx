@@ -1,42 +1,45 @@
-'use client';
+"use client"
 
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 export default function LoginPage() {
-  const { signInWithGoogle } = useAuth();
-  const router = useRouter();
+  const { user, signIn } = useAuth()
+  const router = useRouter()
 
-  const handleLogin = async () => {
-    try {
-      await signInWithGoogle();
-      router.push('/dashboard');
-    } catch (error) {
-      console.error('Login failed:', error);
+  useEffect(() => {
+    if (user) {
+      router.push("/mypage")
     }
-  };
+  }, [user, router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            t2designにログイン
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            AIでデザインを自動生成するプラットフォーム
-          </p>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 container py-12">
+        <div className="max-w-md mx-auto space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold">ログイン</h1>
+            <p className="text-muted-foreground">
+              T2Designにログインして、AIデザイン生成を始めましょう
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <Button
+              className="w-full"
+              onClick={() => signIn()}
+            >
+              Googleでログイン
+            </Button>
+          </div>
         </div>
-        <div className="mt-8">
-          <Button
-            onClick={handleLogin}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Googleでログイン
-          </Button>
-        </div>
-      </div>
+      </main>
+      <Footer />
     </div>
-  );
+  )
 } 
