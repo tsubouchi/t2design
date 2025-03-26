@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { auth } from "@/lib/firebase"
 import { User, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/use-toast"
 
 interface AuthContextType {
   user: User | null
@@ -38,10 +39,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const provider = new GoogleAuthProvider()
       const result = await signInWithPopup(auth, provider)
       setUser(result.user)
+      toast({
+        title: "ログイン成功",
+        description: "マイページにリダイレクトします",
+      })
       router.push("/mypage")
     } catch (error) {
       console.error("Error signing in:", error)
-      throw error
+      toast({
+        title: "ログインエラー",
+        description: "ログインに失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      })
     }
   }
 
@@ -49,10 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await firebaseSignOut(auth)
       setUser(null)
+      toast({
+        title: "ログアウト成功",
+        description: "トップページにリダイレクトします",
+      })
       router.push("/")
     } catch (error) {
       console.error("Error signing out:", error)
-      throw error
+      toast({
+        title: "ログアウトエラー",
+        description: "ログアウトに失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      })
     }
   }
 
