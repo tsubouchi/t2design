@@ -17,9 +17,12 @@ if (getApps().length === 0) {
   console.log("Firebase initialized with config:", {
     projectId: firebaseConfig.projectId,
     authDomain: firebaseConfig.authDomain,
+    apiKey: firebaseConfig.apiKey?.slice(0, 5) + "...",
+    appId: firebaseConfig.appId,
   });
 } else {
   app = getApps()[0];
+  console.log("Using existing Firebase app");
 }
 
 const auth = getAuth(app);
@@ -33,5 +36,14 @@ if (process.env.NODE_ENV === "development") {
     console.log("Failed to connect to Firebase Auth Emulator:", error);
   }
 }
+
+// 認証状態の変更を監視
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    console.log("User is signed in:", user.email);
+  } else {
+    console.log("User is signed out");
+  }
+});
 
 export { app, auth }; 
