@@ -66,28 +66,47 @@ export default function CreatePage() {
     setStep(2)
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setIsGenerating(true)
     setProgress(0)
 
-    // Simulate progress
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setIsGenerating(false)
-          // Mock results
-          setResults([
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-            "/placeholder.svg?height=600&width=600",
-          ])
-          return 100
-        }
-        return prev + 10
+    try {
+      // プロンプトの作成
+      const designPrompt = `Create a ${designType} design with the following specifications:
+        - Aspect ratio: ${aspectRatio}
+        - Width: ${customWidth}px
+        - Height: ${customHeight}px
+        - Description: ${prompt}
+        ${referenceUrl ? `- Reference URL: ${referenceUrl}` : ''}
+      `
+
+      // AIモデルを呼び出してデザインを生成
+      const response = await fetch('/api/designs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: designPrompt,
+          type: designType,
+          size: `${customWidth}x${customHeight}`,
+          aspectRatio,
+        }),
       })
-    }, 500)
+
+      if (!response.ok) {
+        throw new Error('デザインの生成に失敗しました')
+      }
+
+      const data = await response.json()
+      setResults(data.images)
+      setProgress(100)
+    } catch (error) {
+      console.error('Error generating design:', error)
+      // エラー処理を追加する必要があります
+    } finally {
+      setIsGenerating(false)
+    }
   }
 
   const handleRegenerate = () => {
@@ -95,9 +114,28 @@ export default function CreatePage() {
     handleGenerate()
   }
 
-  const handleDownload = (format: "svg" | "png") => {
-    // Mock download functionality
-    alert(`${format.toUpperCase()}形式でダウンロードします`)
+  const handleDownload = async (format: "svg" | "png") => {
+    if (selectedResult === null) return
+
+    try {
+      const response = await fetch(`/api/designs/${results[selectedResult]}/download?format=${format}`)
+      if (!response.ok) {
+        throw new Error('ダウンロードに失敗しました')
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `design.${format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error downloading design:', error)
+      // エラー処理を追加する必要があります
+    }
   }
 
   return (

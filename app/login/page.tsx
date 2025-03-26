@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/firebase"
 
 export default function LoginPage() {
   const { user, signIn } = useAuth()

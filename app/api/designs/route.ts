@@ -5,7 +5,7 @@ import { auth } from '@/lib/firebase-admin';
 
 export async function POST(req: Request) {
   try {
-    const { prompt, type, size, images, svg } = await req.json();
+    const { prompt, type, size, aspectRatio } = await req.json();
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return NextResponse.json({ error: '認証が必要です' }, { status: 401 });
@@ -15,22 +15,46 @@ export async function POST(req: Request) {
     const decodedToken = await auth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
-    const design = {
+    // TODO: AIモデルを使用してデザインを生成
+    // ここでは仮のレスポンスを返します
+    const generatedImages = [
+      {
+        url: `/placeholder.svg?height=${size.split('x')[1]}&width=${size.split('x')[0]}`,
+        svg: '<svg>...</svg>' // 実際のSVGデータ
+      },
+      {
+        url: `/placeholder.svg?height=${size.split('x')[1]}&width=${size.split('x')[0]}`,
+        svg: '<svg>...</svg>'
+      },
+      {
+        url: `/placeholder.svg?height=${size.split('x')[1]}&width=${size.split('x')[0]}`,
+        svg: '<svg>...</svg>'
+      },
+      {
+        url: `/placeholder.svg?height=${size.split('x')[1]}&width=${size.split('x')[0]}`,
+        svg: '<svg>...</svg>'
+      }
+    ];
+
+    // Firestoreにデザインを保存
+    const designDoc = await addDoc(collection(db, 'designs'), {
       userId,
       prompt,
       type,
       size,
-      images,
-      svg,
+      aspectRatio,
+      images: generatedImages,
       createdAt: new Date().toISOString(),
-    };
+    });
 
-    const docRef = await addDoc(collection(db, 'designs'), design);
-    return NextResponse.json({ id: docRef.id, ...design });
+    return NextResponse.json({
+      id: designDoc.id,
+      images: generatedImages.map(img => img.url)
+    });
   } catch (error) {
-    console.error('Error saving design:', error);
+    console.error('Error generating design:', error);
     return NextResponse.json(
-      { error: 'デザインの保存中にエラーが発生しました' },
+      { error: 'デザインの生成に失敗しました' },
       { status: 500 }
     );
   }
