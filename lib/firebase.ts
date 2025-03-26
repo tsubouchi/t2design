@@ -1,7 +1,8 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
+import { getAuth, setPersistence, browserLocalPersistence, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getDatabase, connectDatabaseEmulator } from 'firebase/database';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -29,6 +30,18 @@ if (getApps().length === 0) {
 }
 
 const auth = getAuth(app);
+const db = getFirestore(app);
+const realtimeDb = getDatabase(app);
+const functions = getFunctions(app, 'asia-northeast1');
+
+// エミュレータに接続（開発環境のみ）
+if (process.env.NODE_ENV === 'development') {
+  console.log('Using Firebase emulators');
+  connectAuthEmulator(auth, 'http://0.0.0.0:9299');
+  connectFirestoreEmulator(db, '0.0.0.0', 8281);
+  connectDatabaseEmulator(realtimeDb, '0.0.0.0', 9113);
+  connectFunctionsEmulator(functions, '0.0.0.0', 5001);
+}
 
 // 認証状態の永続化を設定
 setPersistence(auth, browserLocalPersistence)
@@ -39,9 +52,6 @@ setPersistence(auth, browserLocalPersistence)
     console.error("Auth persistence error:", error);
   });
 
-const db = getFirestore(app);
-const realtimeDb = getDatabase(app);
-
 // 認証状態の変更を監視
 auth.onAuthStateChanged((user) => {
   if (user) {
@@ -51,4 +61,4 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-export { app, auth, db, realtimeDb }; 
+export { app, auth, db, realtimeDb, functions };
