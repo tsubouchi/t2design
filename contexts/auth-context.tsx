@@ -1,115 +1,128 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import { auth } from "@/lib/firebase"
+import { User, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from "firebase/auth"
 import { useRouter } from "next/navigation"
+import { toast } from "@/components/ui/use-toast"
 
-type User = {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  credits: number
-  plan: "Free" | "Standard" | "Pro"
-}
-
-type AuthContextType = {
+interface AuthContextType {
   user: User | null
-  isLoading: boolean
-  login: () => Promise<void>
-  logout: () => Promise<void>
+  loading: boolean
+  signIn: () => Promise<void>
+  signOut: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  loading: true,
+  signIn: async () => {},
+  signOut: async () => {},
+})
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // Check if user is already logged in
   useEffect(() => {
-    const checkAuth = () => {
-      try {
-        const storedUser = localStorage.getItem("t2design-user")
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        }
-      } catch (error) {
-        console.error("Failed to restore auth state:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+    console.log("AuthProvider mounted")
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      console.log("Auth state changed:", user?.email)
+      setUser(user)
+      setLoading(false)
+    })
 
-    // Only run on client side
-    if (typeof window !== "undefined") {
-      checkAuth()
-    } else {
-      setIsLoading(false)
-    }
+    return () => unsubscribe()
   }, [])
 
-  // Mock login function
-  const login = async () => {
+  const signIn = async () => {
     try {
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      console.log("Starting Google sign in...")
+      const provider = new GoogleAuthProvider()
+      
+      // スコープを設定
+      provider.addScope('https://www.googleapis.com/auth/userinfo.email')
+      provider.addScope('https://www.googleapis.com/auth/userinfo.profile')
+      
+      // プロンプトを設定
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      })
 
-      const mockUser: User = {
-        id: "user_123",
-        name: "山田太郎",
-        email: "yamada@example.com",
-        avatar: "/placeholder-user.jpg",
-        credits: 15,
-        plan: "Free",
+      console.log("Provider configured, attempting to sign in...")
+      console.log("Current auth state:", auth.currentUser?.email)
+      
+      // ログインを実行
+      const result = await signInWithPopup(auth, provider)
+      console.log("Sign in successful:", result.user.email)
+      
+      // ユーザー情報を設定
+      setUser(result.user)
+      
+      // 成功メッセージを表示
+      toast({
+        title: "ログイン成功",
+        description: "マイページにリダイレクトします",
+      })
+      
+      // マイページにリダイレクト
+      router.push("/mypage")
+    } catch (error: any) {
+      console.error("Error signing in:", error)
+      console.error("Error code:", error.code)
+      console.error("Error message:", error.message)
+      console.error("Error stack:", error.stack)
+      console.error("Current auth state:", auth.currentUser?.email)
+      
+      let errorMessage = "ログインに失敗しました。もう一度お試しください。"
+      
+      // エラーメッセージを設定
+      if (error.code === 'auth/popup-blocked') {
+        errorMessage = "ポップアップがブロックされました。ポップアップを許可してください。"
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = "ログインがキャンセルされました。"
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        errorMessage = "ログインがキャンセルされました。"
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。"
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = "このドメインからのログインは許可されていません。"
       }
-
-      setUser(mockUser)
-
-      // Only run on client side
-      if (typeof window !== "undefined") {
-        localStorage.setItem("t2design-user", JSON.stringify(mockUser))
-      }
-
-      router.push("/dashboard")
-    } catch (error) {
-      console.error("Login failed:", error)
-    } finally {
-      setIsLoading(false)
+      
+      // エラーメッセージを表示
+      toast({
+        title: "ログインエラー",
+        description: errorMessage,
+        variant: "destructive",
+      })
     }
   }
 
-  // Mock logout function
-  const logout = async () => {
+  const signOut = async () => {
     try {
-      setIsLoading(true)
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
+      await firebaseSignOut(auth)
       setUser(null)
-
-      // Only run on client side
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("t2design-user")
-      }
-
+      toast({
+        title: "ログアウト成功",
+        description: "トップページにリダイレクトします",
+      })
       router.push("/")
-    } catch (error) {
-      console.error("Logout failed:", error)
-    } finally {
-      setIsLoading(false)
+    } catch (error: any) {
+      console.error("Error signing out:", error)
+      toast({
+        title: "ログアウトエラー",
+        description: error.message || "ログアウトに失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      })
     }
   }
 
-  return <AuthContext.Provider value={{ user, isLoading, login, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
-  }
-  return context
-}
-
+export const useAuth = () => useContext(AuthContext)

@@ -1,7 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import { getDatabase } from 'firebase/database';
 
 const firebaseConfig = {
@@ -15,10 +14,31 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase initialized with config:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    apiKey: firebaseConfig.apiKey?.slice(0, 5) + "...",
+    appId: firebaseConfig.appId,
+  });
+} else {
+  app = getApps()[0];
+  console.log("Using existing Firebase app");
+}
+
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 const realtimeDb = getDatabase(app);
 
-export { app, auth, db, storage, realtimeDb }; 
+// 認証状態の変更を監視
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    console.log("User is signed in:", user.email);
+  } else {
+    console.log("User is signed out");
+  }
+});
+
+export { app, auth, db, realtimeDb }; 
