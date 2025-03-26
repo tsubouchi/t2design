@@ -24,7 +24,9 @@ import * as functions from 'firebase-functions';
 admin.initializeApp();
 
 // Stripeの初期化
-const stripeClient = new Stripe(functions.config().stripe.secret_key, {
+// デプロイ時に設定が存在しない場合のためのフォールバック値を設定
+const stripeSecretKey = functions.config().stripe?.secret_key || 'sk_test_dummy_key';
+const stripeClient = new Stripe(stripeSecretKey, {
   apiVersion: '2023-10-16',
 });
 
@@ -107,6 +109,11 @@ export const createCheckoutSession = onCall<CheckoutData>({
     const { priceId, successUrl, cancelUrl } = request.data;
     const userId = request.auth.uid;
 
+    // Stripe設定が存在しない場合はエラーを返す
+    if (stripeSecretKey === 'sk_test_dummy_key') {
+      throw new HttpsError('failed-precondition', 'Stripe設定が構成されていません');
+    }
+
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -131,10 +138,17 @@ export const stripeWebhook = onRequest({
   region: 'asia-northeast1',
 }, async (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const endpointSecret = functions.config().stripe.webhook_secret;
+  const endpointSecret = functions.config().stripe?.webhook_secret || '';
 
-  if (!sig || !endpointSecret) {
-    res.status(400).send('Missing stripe-signature or webhook secret');
+  if (!sig) {
+    res.status(400).send('Missing stripe-signature');
+    return;
+  }
+
+  // webhook_secretが設定されていない場合は早期リターン
+  if (!endpointSecret) {
+    console.warn('Webhook secret is not configured');
+    res.status(200).send('Webhook received but secret is not configured');
     return;
   }
 

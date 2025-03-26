@@ -47,8 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // プロンプトを設定
       provider.setCustomParameters({
-        prompt: 'select_account',
-        access_type: 'offline',
+        prompt: 'select_account'
       })
 
       console.log("Provider configured, attempting to sign in...")
@@ -127,4 +126,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext)
-
