@@ -27,16 +27,6 @@ if (getApps().length === 0) {
 
 const auth = getAuth(app);
 
-// 開発環境で認証エミュレーターを使用する場合
-if (process.env.NODE_ENV === "development") {
-  try {
-    connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-    console.log("Connected to Firebase Auth Emulator");
-  } catch (error) {
-    console.log("Failed to connect to Firebase Auth Emulator:", error);
-  }
-}
-
 // 認証状態の変更を監視
 auth.onAuthStateChanged((user) => {
   if (user) {
