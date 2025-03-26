@@ -1,0 +1,14 @@
+"emulators": {
+  "functions": {
+    "port": 5001
+  },
+  "ui": {
+    "port": 4600
+  },
+  "hub": {
+    "port": 4700
+  },
+  "logging": {
+    "port": 4800
+  }
+}

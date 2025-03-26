@@ -1,8 +1,4 @@
-20:02:35.388 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-20:02:35.465 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
-20:02:36.221 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO com.firebase.core.namespace.NamespaceActor - t2design-79508-default-rtdb successfully activated FBKV (SurveyIdle(0)) wait: 57ms, init: 0ms
-20:02:36.261 [NamespaceSystem-blocking-namespace-operation-dispatcher-7] INFO com.firebase.core.namespace.StateManager - Namespace t2design-79508-default-rtdb status Active to Active
-20:03:17.379 [Thread-0] INFO com.firebase.server.forge.App$ - Attempting graceful shutdown.
-20:03:17.385 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO com.firebase.core.namespace.Terminator$Terminator - 1 actors left to terminate: t2design-79508-default-rtdb
-20:03:17.390 [NamespaceSystem-akka.actor.default-dispatcher-6] INFO com.firebase.core.namespace.NamespaceActor - stopped namespace actor for t2design-79508-default-rtdb
-20:03:17.408 [Thread-0] INFO com.firebase.server.forge.App$ - Graceful shutdown complete.
+21:22:31.564 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
+21:22:31.636 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9002
+21:22:34.167 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO com.firebase.core.namespace.NamespaceActor - t2design-79508-default-rtdb successfully activated FBKV (SurveyIdle(0)) wait: 50ms, init: 0ms
+21:22:34.198 [NamespaceSystem-blocking-namespace-operation-dispatcher-6] INFO com.firebase.core.namespace.StateManager - Namespace t2design-79508-default-rtdb status Active to Active
