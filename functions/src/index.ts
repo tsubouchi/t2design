@@ -7,10 +7,10 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
+// v1 の import に変更
+import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
-import * as functions from 'firebase-functions';
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -30,36 +30,15 @@ const stripeClient = new Stripe(stripeSecretKey, {
   apiVersion: '2023-10-16',
 });
 
-interface DesignData {
-  prompt: string;
-  style: string;
-}
-
-interface CheckoutData {
-  priceId: string;
-  successUrl: string;
-  cancelUrl: string;
-}
-
-interface GetDesignData {
-  designId: string;
-}
-
-interface UpdateCreditsData {
-  amount: number;
-}
-
 // デザイン関連の関数
-export const createDesign = onCall<DesignData>({
-  region: 'asia-northeast1',
-}, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+export const createDesign = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '認証が必要です');
   }
 
   try {
-    const { prompt, style } = request.data;
-    const userId = request.auth.uid;
+    const { prompt, style } = data;
+    const userId = context.auth.uid;
     const designRef = admin.firestore().collection('designs').doc();
     
     await designRef.set({
@@ -72,46 +51,42 @@ export const createDesign = onCall<DesignData>({
 
     return { id: designRef.id };
   } catch (error) {
-    throw new HttpsError('internal', 'デザインの作成に失敗しました');
+    throw new functions.https.HttpsError('internal', 'デザインの作成に失敗しました');
   }
 });
 
-export const getDesign = onCall<GetDesignData>({
-  region: 'asia-northeast1',
-}, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+export const getDesign = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '認証が必要です');
   }
 
   try {
-    const { designId } = request.data;
+    const { designId } = data;
     const designDoc = await admin.firestore().collection('designs').doc(designId).get();
     
     if (!designDoc.exists) {
-      throw new HttpsError('not-found', 'デザインが見つかりません');
+      throw new functions.https.HttpsError('not-found', 'デザインが見つかりません');
     }
 
     return designDoc.data();
   } catch (error) {
-    throw new HttpsError('internal', 'デザインの取得に失敗しました');
+    throw new functions.https.HttpsError('internal', 'デザインの取得に失敗しました');
   }
 });
 
 // Stripe関連の関数
-export const createCheckoutSession = onCall<CheckoutData>({
-  region: 'asia-northeast1',
-}, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+export const createCheckoutSession = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '認証が必要です');
   }
 
   try {
-    const { priceId, successUrl, cancelUrl } = request.data;
-    const userId = request.auth.uid;
+    const { priceId, successUrl, cancelUrl } = data;
+    const userId = context.auth.uid;
 
     // Stripe設定が存在しない場合はエラーを返す
     if (stripeSecretKey === 'sk_test_dummy_key') {
-      throw new HttpsError('failed-precondition', 'Stripe設定が構成されていません');
+      throw new functions.https.HttpsError('failed-precondition', 'Stripe設定が構成されていません');
     }
 
     const session = await stripeClient.checkout.sessions.create({
@@ -130,13 +105,11 @@ export const createCheckoutSession = onCall<CheckoutData>({
 
     return { sessionId: session.id };
   } catch (error) {
-    throw new HttpsError('internal', 'チェックアウトセッションの作成に失敗しました');
+    throw new functions.https.HttpsError('internal', 'チェックアウトセッションの作成に失敗しました');
   }
 });
 
-export const stripeWebhook = onRequest({
-  region: 'asia-northeast1',
-}, async (req, res) => {
+export const stripeWebhook = functions.region('asia-northeast1').https.onRequest(async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const endpointSecret = functions.config().stripe?.webhook_secret || '';
 
@@ -157,7 +130,7 @@ export const stripeWebhook = onRequest({
     
     switch (event.type) {
       case 'checkout.session.completed':
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const userId = session.client_reference_id;
         
         if (userId) {
@@ -177,16 +150,14 @@ export const stripeWebhook = onRequest({
 });
 
 // 認証関連の関数
-export const updateUserCredits = onCall<UpdateCreditsData>({
-  region: 'asia-northeast1',
-}, async (request) => {
-  if (!request.auth) {
-    throw new HttpsError('unauthenticated', '認証が必要です');
+export const updateUserCredits = functions.region('asia-northeast1').https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', '認証が必要です');
   }
 
   try {
-    const { amount } = request.data;
-    const userId = request.auth.uid;
+    const { amount } = data;
+    const userId = context.auth.uid;
     
     await admin.firestore().collection('users').doc(userId).update({
       credits: admin.firestore.FieldValue.increment(amount)
@@ -194,6 +165,6 @@ export const updateUserCredits = onCall<UpdateCreditsData>({
 
     return { success: true };
   } catch (error) {
-    throw new HttpsError('internal', 'クレジットの更新に失敗しました');
+    throw new functions.https.HttpsError('internal', 'クレジットの更新に失敗しました');
   }
 });

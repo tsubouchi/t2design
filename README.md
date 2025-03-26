@@ -52,6 +52,14 @@ AIを使って高品質なデザインを自動生成するWebアプリケーシ
   - ヘッダーでの残高表示
   - クレジット管理ページでの詳細表示
 
+### バックエンド機能
+- [x] Firebase Functions
+  - [x] デザイン作成関数 (`createDesign`)
+  - [x] デザイン取得関数 (`getDesign`)
+  - [x] Stripe決済セッション作成関数 (`createCheckoutSession`)
+  - [x] Stripeウェブフック処理関数 (`stripeWebhook`)
+  - [x] ユーザークレジット更新関数 (`updateUserCredits`)
+
 ## 未実装機能 🚧
 
 ### AI生成機能
@@ -95,6 +103,10 @@ AIを使って高品質なデザインを自動生成するWebアプリケーシ
   - Realtime Database
   - Storage
   - Hosting
+  - Functions (Node.js 18)
+- Stripe
+  - 決済処理
+  - ウェブフック連携
 
 ## 開発環境のセットアップ
 
@@ -142,13 +154,80 @@ NEXT_PUBLIC_STRIPE_CREDIT_1000_PRICE_ID=your_credit_1000_price_id
 NEXT_PUBLIC_STRIPE_CREDIT_3000_PRICE_ID=your_credit_3000_price_id
 ```
 
+## Firebase Functionsの設定と権限
+
+Firebase Functionsをデプロイするには、以下の設定と権限が必要です：
+
+### 必要なIAM権限
+
+- **Cloud Functions 開発者**:
+  ```bash
+  gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member=user:YOUR_EMAIL \
+    --role=roles/cloudfunctions.developer
+  ```
+
+- **Cloud Build サービスアカウントの権限**:
+  ```bash
+  # プロジェクト番号の取得
+  PROJECT_NUMBER=$(gcloud projects describe PROJECT_ID --format='value(projectNumber)')
+  
+  # Cloud Buildサービスアカウントに権限を付与
+  gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member=serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com \
+    --role=roles/cloudfunctions.developer
+  
+  gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member=serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com \
+    --role=roles/iam.serviceAccountUser
+  ```
+
+### Stripe設定
+
+Stripe連携には以下の環境変数設定が必要です：
+
+```bash
+# Stripeの秘密鍵とウェブフックシークレットを設定
+firebase functions:config:set stripe.secret_key="sk_live_YOUR_SECRET_KEY" stripe.webhook_secret="whsec_YOUR_WEBHOOK_SECRET"
+```
+
+### Firebase Functionsの注意事項
+
+1. **予約キーワードの使用禁止**:
+   - `.env`ファイルで`FIREBASE_CONFIG`や`GCLOUD_PROJECT`などの予約キーワードを使用しないでください。
+
+2. **Node.jsバージョンの互換性**:
+   - 現在のFunctionsはNode.js 18を使用しています（2025年10月31日に廃止予定）
+   - 将来的にはNode.js 20へのアップグレードを計画してください
+
+3. **デプロイ時の問題解決**:
+   - デプロイエラーが発生した場合は、`--force`オプションを試してください
+   ```bash
+   firebase deploy --only functions --force
+   ```
+   - 個別の関数をデプロイすることも可能です
+   ```bash
+   firebase deploy --only functions:functionName
+   ```
+
+4. **firebase.json設定の注意点**:
+   - v1関数とv2関数の混在を避けてください
+   - CPU設定などはv2関数でのみ有効です
+
+5. **依存関係の管理**:
+   - パッケージマネージャー（npm/pnpm）の一貫した使用
+   - ロックファイルと`package.json`の同期を維持
+
 ## デプロイ
 
 ```bash
 # プロダクションビルド
 pnpm build
 
-# Firebaseへのデプロイ
+# Functionsのみをデプロイ
+firebase deploy --only functions
+
+# アプリケーション全体をデプロイ
 firebase deploy
 ```
 
@@ -169,6 +248,10 @@ firebase deploy
 - エラーページ（`app/error.tsx`）とローディングページ（`app/loading.tsx`）が実装されています
 - 認証エラー時は適切なエラーメッセージが表示されます
 - ネットワークエラー時は再試行が可能です
+
+### Firebase Functionsのバージョン管理
+- 現在はv1関数（GCF gen 1）を使用しています
+- 今後のアップデートでFirebase Functions SDKを最新版（5.1.0以上）にアップグレードすることを推奨
 
 ## ライセンス
 

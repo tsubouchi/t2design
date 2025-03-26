@@ -1,4 +1,18 @@
 {
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18",
+    "predeploy": [
+      "npm --prefix \"$RESOURCE_DIR\" run build"
+    ],
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "*.local"
+    ]
+  },
   "hosting": {
     "source": ".",
     "ignore": [
@@ -15,21 +29,6 @@
   },
   "database": {
     "rules": "database.rules.json"
-  },
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs18",
-    "codebase": "default",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "*.local"
-    ],
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run build"
-    ]
   },
   "emulators": {
     "functions": {
