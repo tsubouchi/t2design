@@ -12,6 +12,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { generateDesign } from '@/lib/ai';
 import { useToast } from '@/components/ui/use-toast';
+import { auth } from '@/lib/firebase';
 
 export function DesignForm() {
   const [prompt, setPrompt] = useState('');
@@ -33,9 +34,10 @@ export function DesignForm() {
       });
 
       setResult(design);
+      await saveDesign(design);
       toast({
         title: 'デザイン生成完了',
-        description: '新しいデザインが生成されました。',
+        description: '新しいデザインが生成され、保存されました。',
       });
     } catch (error) {
       console.error('Error generating design:', error);
@@ -46,6 +48,41 @@ export function DesignForm() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveDesign = async (design: { images: any[]; svg: string }) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('ユーザーが認証されていません');
+      }
+
+      const token = await user.getIdToken();
+      const response = await fetch('/api/designs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          prompt,
+          type,
+          size,
+          ...design,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('デザインの保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('Error saving design:', error);
+      toast({
+        title: 'エラー',
+        description: 'デザインの保存中にエラーが発生しました。',
+        variant: 'destructive',
+      });
     }
   };
 
