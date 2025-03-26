@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer"
 import { GoogleLoginButton } from "@/components/google-login-button"
 
 export default function LoginPage() {
-  const { login, isLoading } = useAuth()
+  const { signIn, loading } = useAuth()
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -17,7 +17,7 @@ export default function LoginPage() {
           </div>
           <div className="w-full max-w-md space-y-6">
             <div className="grid gap-6">
-              <GoogleLoginButton onClick={login} isLoading={isLoading} />
+              <GoogleLoginButton onClick={signIn} isLoading={loading} />
             </div>
           </div>
         </div>

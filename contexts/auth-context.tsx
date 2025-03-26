@@ -51,6 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         access_type: 'offline',
       })
 
+      console.log("Provider configured, attempting to sign in...")
+      console.log("Current auth state:", auth.currentUser?.email)
+      
       // ログインを実行
       const result = await signInWithPopup(auth, provider)
       console.log("Sign in successful:", result.user.email)
@@ -68,6 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push("/mypage")
     } catch (error: any) {
       console.error("Error signing in:", error)
+      console.error("Error code:", error.code)
+      console.error("Error message:", error.message)
+      console.error("Error stack:", error.stack)
+      console.error("Current auth state:", auth.currentUser?.email)
+      
       let errorMessage = "ログインに失敗しました。もう一度お試しください。"
       
       // エラーメッセージを設定
@@ -79,6 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         errorMessage = "ログインがキャンセルされました。"
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。"
+      } else if (error.code === 'auth/unauthorized-domain') {
+        errorMessage = "このドメインからのログインは許可されていません。"
       }
       
       // エラーメッセージを表示
