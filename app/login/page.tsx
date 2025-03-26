@@ -13,7 +13,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push("/mypage")
+      router.push("/")
     }
   }, [user, router])
 
