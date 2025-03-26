@@ -8,6 +8,7 @@ import { CreditCard } from "lucide-react"
 import { ProtectedRoute } from "@/components/protected-route"
 import { useAuth } from "@/contexts/auth-context"
 import { PricingSectionDemo } from "@/components/blocks/pricing-section-demo"
+import { CreditManager } from '@/components/CreditManager'
 
 export default function CreditsPage() {
   const { user } = useAuth()
