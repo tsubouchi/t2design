@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async () => {
     try {
       const provider = new GoogleAuthProvider()
-      await signInWithPopup(auth, provider)
+      const result = await signInWithPopup(auth, provider)
+      setUser(result.user)
       router.push("/mypage")
     } catch (error) {
       console.error("Error signing in:", error)
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await firebaseSignOut(auth)
+      setUser(null)
       router.push("/")
     } catch (error) {
       console.error("Error signing out:", error)
