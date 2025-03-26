@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,7 +11,27 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let app;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+  console.log("Firebase initialized with config:", {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+  });
+} else {
+  app = getApps()[0];
+}
+
 const auth = getAuth(app);
+
+// 開発環境で認証エミュレーターを使用する場合
+if (process.env.NODE_ENV === "development") {
+  try {
+    connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+    console.log("Connected to Firebase Auth Emulator");
+  } catch (error) {
+    console.log("Failed to connect to Firebase Auth Emulator:", error);
+  }
+}
 
 export { app, auth }; 

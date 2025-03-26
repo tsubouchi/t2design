@@ -40,33 +40,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Starting Google sign in...")
       const provider = new GoogleAuthProvider()
+      
+      // スコープを設定
       provider.addScope('https://www.googleapis.com/auth/userinfo.email')
       provider.addScope('https://www.googleapis.com/auth/userinfo.profile')
+      
+      // プロンプトを設定
       provider.setCustomParameters({
         prompt: 'select_account',
         access_type: 'offline',
       })
-      
+
+      // ログインを実行
       const result = await signInWithPopup(auth, provider)
       console.log("Sign in successful:", result.user.email)
+      
+      // ユーザー情報を設定
       setUser(result.user)
+      
+      // 成功メッセージを表示
       toast({
         title: "ログイン成功",
         description: "マイページにリダイレクトします",
       })
+      
+      // マイページにリダイレクト
       router.push("/mypage")
     } catch (error: any) {
       console.error("Error signing in:", error)
       let errorMessage = "ログインに失敗しました。もう一度お試しください。"
       
+      // エラーメッセージを設定
       if (error.code === 'auth/popup-blocked') {
         errorMessage = "ポップアップがブロックされました。ポップアップを許可してください。"
       } else if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "ログインがキャンセルされました。"
       } else if (error.code === 'auth/cancelled-popup-request') {
         errorMessage = "ログインがキャンセルされました。"
+      } else if (error.code === 'auth/network-request-failed') {
+        errorMessage = "ネットワークエラーが発生しました。インターネット接続を確認してください。"
       }
       
+      // エラーメッセージを表示
       toast({
         title: "ログインエラー",
         description: errorMessage,
